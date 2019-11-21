@@ -1,121 +1,125 @@
 package com.example.locationsample
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.graphics.Color
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
-import android.net.ConnectivityManager
-import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.locationsample.data.ConnectionReceiver
+import com.example.locationsample.data.gps.GpsGoogleApiClient
+import com.example.locationsample.data.gps.LocationTrackerAndroidLocationAPI
+import com.example.locationsample.data.gps.REQUEST_LOCATION
+import com.example.locationsample.data.networks.isEnableMobileNetwork
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity(), ManagerConnectionReceiver.NetworkReceiverListener {
-
+class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverListener {
 
     private var wifiManager: WifiManager? = null
-    private var managerConnectionReceiver: ManagerConnectionReceiver? = null
+    private var managerConnectionReceiver: ConnectionReceiver? = null
+    private var trackerALA: LocationTrackerAndroidLocationAPI? = null
+    private var trackerGAC: GpsGoogleApiClient? = null
+    private var locationLast: Location? = null
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        managerConnectionReceiver = ManagerConnectionReceiver()
+        //create LocationTracker Object
+        trackerALA = LocationTrackerAndroidLocationAPI(this)
+        trackerGAC = GpsGoogleApiClient(this)
+
+        managerConnectionReceiver = ConnectionReceiver()
         managerConnectionReceiver!!.setNetworkReceiverListener(this)
 
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         wifiSwitch.setOnCheckedChangeListener(wifiSwitchListener)
+
+        mobileNetworkSwitch.isChecked = isEnableMobileNetwork(this)!!
+
 
         btnLocationSetting.setOnClickListener {
             startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
         }
 
         btnPlayServicesLocation.setOnClickListener {
-            GpsGoogleApiClient(this).turnOnGPS() // play-services-location:17.0.0
+            trackerGAC!!.turnOnGPS() // play-services-location:17.0.0
         }
 
-
-    }
-
-
-    private var isGPS = false
-
-    private fun turnGPSOn() {
-        val provider = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.LOCATION_PROVIDERS_ALLOWED
-        )
-        if (!provider.contains("gps")) { //if gps is disabled
-            val poke = Intent()
-            poke.setClassName(
-                "com.android.settings",
-                "com.android.settings.widget.SettingsAppWidgetProvider"
-            )
-            poke.addCategory(Intent.CATEGORY_ALTERNATIVE)
-            poke.data = Uri.parse("3")
-            sendBroadcast(poke)
-        }
-    }
-
-    private fun turnGPSOff() {
-        val provider = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.LOCATION_PROVIDERS_ALLOWED
-        )
-        if (provider.contains("gps")) { //if gps is enabled
-            val poke = Intent()
-            poke.setClassName(
-                "com.android.settings",
-                "com.android.settings.widget.SettingsAppWidgetProvider"
-            )
-            poke.addCategory(Intent.CATEGORY_ALTERNATIVE)
-            poke.data = Uri.parse("3")
-            sendBroadcast(poke)
-        }
-    }
-
-    private fun canToggleGPS(): Boolean {
-        val pacman = packageManager
-        var pacInfo: PackageInfo?
-        pacInfo = try {
-            pacman.getPackageInfo("com.android.settings", PackageManager.GET_RECEIVERS)
-        } catch (e: PackageManager.NameNotFoundException) {
-            return false //package not found
-        }
-        if (pacInfo != null) {
-            for (actInfo in pacInfo.receivers) { //test if recevier is exported. if so, we can toggle GPS.
-                if (actInfo.name == "com.android.settings.widget.SettingsAppWidgetProvider" && actInfo.exported) {
-                    return true
-                }
+        btnGetLocation.setOnClickListener {
+            // check if location is available
+            trackerALA!!.checkIfLocationAvailable()
+            if (trackerALA!!.isLocationEnabled) {
+                val latitude = trackerALA!!.getLatitude()
+                val longitude = trackerALA!!.getLongitude()
+                trackerALA!!.getCompleteAddressString(latitude, longitude)
+            } else { // show dialog box to user to enable location
+                trackerALA!!.askToOnLocation()
             }
+            trackerGAC!!.getLastLocation()
         }
-        return false //default
+
+        moreSetting.setOnClickListener {
+            /* val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+             val networkInfo = cm.activeNetworkInfo
+             val type = networkInfo.type
+             val typeName = networkInfo.typeName
+             val connected = networkInfo.isConnected
+
+             println("MainActivity.onCreate type $type")
+             println("MainActivity.onCreate typeName $typeName")
+             println("MainActivity.onCreate connected $connected")*/
+
+        }
+
+        var locationClient = object : LocationListener {
+            override fun onLocationChanged(location: Location?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onProviderEnabled(provider: String?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onProviderDisabled(provider: String?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+        }
+
     }
+
 
     override fun onStart() {
         super.onStart()
         registerManagerConnectionReceiver()
-        gpsSwitch.isChecked = getGPSState(this)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        gpsSwitch.isChecked = isGpsEnabled(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterManagerConnectionReceiver()
+    }
+
+    override fun onMobileNetworkStateChanged(isState: Boolean) {
+        mobileNetworkSwitch.isChecked = isState
     }
 
     override fun onNetworkConnectionChanged(isConnected: Boolean) {
@@ -168,11 +172,15 @@ class MainActivity : AppCompatActivity(), ManagerConnectionReceiver.NetworkRecei
 
     //endregion
 
+    @SuppressLint("InlinedApi")
     private fun registerManagerConnectionReceiver() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION)
         intentFilter.addAction(LocationManager.PROVIDERS_CHANGED_ACTION)
+        intentFilter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
+        intentFilter.addAction(TelephonyManager.ACTION_NETWORK_COUNTRY_CHANGED)
+        intentFilter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
         registerReceiver(managerConnectionReceiver, intentFilter)
     }
 
