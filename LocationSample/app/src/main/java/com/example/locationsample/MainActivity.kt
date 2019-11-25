@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverList
             if (trackerALA!!.isLocationEnabled) {
                 val latitude = trackerALA!!.getLatitude()
                 val longitude = trackerALA!!.getLongitude()
-                trackerALA!!.getCompleteAddressString(latitude, longitude)
+                // trackerALA!!.getCompleteAddressString(latitude, longitude)
             } else { // show dialog box to user to enable location
                 trackerALA!!.askToOnLocation()
             }

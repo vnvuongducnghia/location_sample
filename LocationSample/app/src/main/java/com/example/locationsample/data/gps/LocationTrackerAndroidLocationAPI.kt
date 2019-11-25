@@ -41,7 +41,6 @@ class LocationTrackerAndroidLocationAPI(private val context: Context) : Service(
     companion object {
         // minimum distance to request for location update
         private const val MIN_DISTANCE_TO_REQUEST_LOCATION: Long = 3 // in meters
-        private const val MAX_DISTANCE_TO_SAVE_LOCATION: Long = 30 // in meters
         // minimum time to request location updates
         private const val MIN_TIME_FOR_UPDATES: Long = 3000 // 1 sec
     }
@@ -112,10 +111,10 @@ class LocationTrackerAndroidLocationAPI(private val context: Context) : Service(
                     if (locationLast != null && location != null) {
                         val distance = distanceBetweenLocation(locationLast!!, location!!)
                         println("MainActivity.onCreate distance $distance")
-                        if (distance > MAX_DISTANCE_TO_SAVE_LOCATION) {
-                            println("MainActivity.onCreate distance not bad")
-                        } else {
+                        if (distance > MIN_DISTANCE_TO_REQUEST_LOCATION) {
                             println("MainActivity.onCreate distance good")
+                        } else {
+                            println("MainActivity.onCreate distance bad")
                         }
                     } else {
                         println("MainActivity.onCreate locationLast null location null")
