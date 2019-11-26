@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
@@ -21,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.locationsample.data.ConnectionReceiver
 import com.example.locationsample.data.gps.GpsGoogleApiClient
 import com.example.locationsample.data.gps.LocationTrackerAndroidLocationAPI
+import com.example.locationsample.data.gps.LocationTrackerManager
 import com.example.locationsample.data.gps.REQUEST_LOCATION
 import com.example.locationsample.data.networks.isEnableMobileNetwork
 import kotlinx.android.synthetic.main.activity_main.*
@@ -60,17 +60,14 @@ class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverList
             trackerGAC!!.turnOnGPS() // play-services-location:17.0.0
         }
 
-        btnGetLocation.setOnClickListener {
-            // check if location is available
-            trackerALA!!.checkIfLocationAvailable()
-            if (trackerALA!!.isLocationEnabled) {
-                val latitude = trackerALA!!.getLatitude()
-                val longitude = trackerALA!!.getLongitude()
-                // trackerALA!!.getCompleteAddressString(latitude, longitude)
-            } else { // show dialog box to user to enable location
-                trackerALA!!.askToOnLocation()
-            }
-            trackerGAC!!.getLastLocation()
+        val locationTracker = LocationTrackerManager()
+
+        btnTracking.setOnClickListener {
+            locationTracker.startTracker()
+        }
+
+        btnStopTracking.setOnClickListener {
+            locationTracker.stopTracker()
         }
 
         moreSetting.setOnClickListener {
@@ -83,25 +80,6 @@ class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverList
              println("MainActivity.onCreate type $type")
              println("MainActivity.onCreate typeName $typeName")
              println("MainActivity.onCreate connected $connected")*/
-
-        }
-
-        var locationClient = object : LocationListener {
-            override fun onLocationChanged(location: Location?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun onProviderEnabled(provider: String?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun onProviderDisabled(provider: String?) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
 
         }
 

@@ -43,6 +43,7 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".data.gps.LocationRepeatReceiver" />
     </application>
 
 </manifest>

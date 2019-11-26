@@ -104,20 +104,19 @@ class LocationTrackerAndroidLocationAPI(private val context: Context) : Service(
                     }
                 }
 
-                println("MainActivity.onCreate location ${location?.latitude} ${location?.longitude}")
                 locationLast = if (locationLast == null) location
                 else {
                     // Check new location
                     if (locationLast != null && location != null) {
                         val distance = distanceBetweenLocation(locationLast!!, location!!)
-                        println("MainActivity.onCreate distance $distance")
+                        println("MyBroadcastReceiver.onReceive distance $distance")
                         if (distance > MIN_DISTANCE_TO_REQUEST_LOCATION) {
-                            println("MainActivity.onCreate distance good")
+                            println("MyBroadcastReceiver.onReceive distance good")
                         } else {
-                            println("MainActivity.onCreate distance bad")
+                            println("MyBroadcastReceiver.onReceive distance bad")
                         }
                     } else {
-                        println("MainActivity.onCreate locationLast null location null")
+                        println("MyBroadcastReceiver.onReceive locationLast null location null")
                     }
                     location
                 }

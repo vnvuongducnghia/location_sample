@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">UnboundService</string>
+    <string name="service_name">UnboundService</string>
+</resources>
