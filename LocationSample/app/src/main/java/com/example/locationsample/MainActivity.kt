@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverList
         }
 
         btnPlayServicesLocation.setOnClickListener {
-            trackerGAC!!.turnOnGPS() // play-services-location:17.0.0
+            trackerGAC!!.initGAC() // play-services-location:17.0.0
         }
 
         val locationTracker = LocationTrackerManager()
@@ -89,6 +89,12 @@ class MainActivity : AppCompatActivity(), ConnectionReceiver.NetworkReceiverList
     override fun onStart() {
         super.onStart()
         registerManagerConnectionReceiver()
+        if (trackerGAC != null) trackerGAC!!.onConnect()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (trackerGAC != null) trackerGAC!!.onDisconnect()
     }
 
     override fun onDestroy() {

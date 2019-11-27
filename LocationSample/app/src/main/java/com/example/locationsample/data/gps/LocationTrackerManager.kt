@@ -26,7 +26,7 @@ class LocationTrackerManager {
             )
         }
 
-        val intent = Intent(context, LocationRepeatReceiver::class.java)
+        private val intent = Intent(context, LocationRepeatReceiver::class.java)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pIntent = PendingIntent.getBroadcast(context, REQUEST_CODE, intent, FLAG)
 
